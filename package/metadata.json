@@ -1,0 +1,18 @@
+{
+    "KPlugin": {
+        "Name": "Hebrew Memorial Dates",
+        "Description": "Nearest memorial date and Jewish holiday, with Hebrew calendar dates",
+        "Icon": "view-calendar",
+        "Category": "Date and Time",
+        "Id": "org.kde.plasma.starter",
+        "Version": "1.0",
+        "License": "MIT",
+        "Authors": [
+            {
+                "Name": "Solomon"
+            }
+        ]
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}
