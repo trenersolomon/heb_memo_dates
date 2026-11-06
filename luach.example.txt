@@ -7,7 +7,10 @@
 # date  D.M.Y
 #       - year up to 5000  -> Gregorian date,  e.g. 15.3.1950
 #       - year above 5000  -> Hebrew date,     e.g. 10.8.5750
-#         (month numbers as in libhdate: 1 = Tishrei ... 12 = Elul)
+#         (month numbers as in libhdate: 1 = Tishrei ... 12 = Elul,
+#          6 = Adar in a plain year, 13 / 14 = Adar I / II in a leap year)
+#       Either way the entry repeats every year on its HEBREW date. A Gregorian
+#       date is the original date (e.g. a birth) and is converted once.
 # name  free text
 # type  free text, shown before the name (e.g. Birthday, Yahrzeit)
 #

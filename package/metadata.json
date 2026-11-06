@@ -4,8 +4,10 @@
         "Description": "Nearest memorial date and Jewish holiday, with Hebrew calendar dates",
         "Icon": "view-calendar",
         "Category": "Date and Time",
-        "Id": "org.kde.plasma.starter",
+        "Id": "io.github.trenersolomon.hebmemodates",
         "Version": "1.0",
+        "Website": "https://github.com/trenersolomon/heb_memo_dates",
+        "BugReportUrl": "https://github.com/trenersolomon/heb_memo_dates/issues",
         "License": "MIT",
         "Authors": [
             {

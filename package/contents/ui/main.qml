@@ -15,7 +15,7 @@ PlasmoidItem {
 
     // Widget Setup
     width: Kirigami.Units.gridUnit * 20
-    height: Kirigami.Units.gridUnit * 20
+    height: Kirigami.Units.gridUnit * 17
     toolTipMainText: "Hebrew Memory dates"
     toolTipSubText: memo.todayText
 
@@ -40,9 +40,33 @@ PlasmoidItem {
     // Define the full representation (popup or desktop widget)
     fullRepresentation: Item {
         Layout.minimumWidth: Kirigami.Units.gridUnit * 12
-        Layout.minimumHeight: Kirigami.Units.gridUnit * 14
+        // Height follows the content, so there is no unused space at the
+        // bottom whatever the font size or language is.
+        Layout.minimumHeight: content.implicitHeight + Kirigami.Units.largeSpacing * 2
         Layout.preferredWidth: root.width
-        Layout.preferredHeight: root.height
+        Layout.preferredHeight: content.implicitHeight + Kirigami.Units.largeSpacing * 2
+
+        // The watermark below is larger than the corner it sits in on purpose,
+        // so whatever sticks out must be cut off at the widget edge.
+        clip: true
+
+        // Subtle symbol in the bottom-right corner. It is drawn first, so it
+        // lies under the text. isMask keeps only the shape and repaints it in
+        // the theme's text color, which works on light and dark themes alike.
+        Kirigami.Icon {
+            source: Qt.resolvedUrl("../images/star.svg")
+            isMask: true
+            color: Kirigami.Theme.textColor
+            opacity: 0.09
+            width: Kirigami.Units.gridUnit * 8
+            height: width
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            // Slightly cut off on the right, but raised off the bottom edge so
+            // the whole lower point of the star stays visible.
+            anchors.rightMargin: -Kirigami.Units.gridUnit / 2
+            anchors.bottomMargin: Kirigami.Units.gridUnit * 1.5
+        }
 
         // One block = small title, big countdown, event name, both dates.
         // Used twice (memorial date, holiday) so they look identical.
@@ -107,6 +131,7 @@ PlasmoidItem {
         }
 
         ColumnLayout {
+            id: content
             anchors.fill: parent
             anchors.margins: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.largeSpacing
@@ -145,21 +170,37 @@ PlasmoidItem {
                 wrapMode: Text.Wrap
             }
 
-            Item {
-                Layout.fillHeight: true
-            }
         }
     }
 
-    // Define the compact representation (icon in panel)
-    compactRepresentation: Item {
-        Kirigami.Icon {
-            anchors.fill: parent
-            source: "plasma"
+    // Compact representation (what is shown in a panel): the symbol plus the
+    // number of days to the nearest memorial date, so it can be read without
+    // opening the widget.
+    compactRepresentation: MouseArea {
+        Layout.minimumWidth: compactRow.implicitWidth
+        Layout.minimumHeight: Kirigami.Units.iconSizes.small
+        onClicked: root.expanded = !root.expanded
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.expanded = !root.expanded
+        RowLayout {
+            id: compactRow
+            anchors.fill: parent
+            spacing: Kirigami.Units.smallSpacing
+
+            Kirigami.Icon {
+                Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                Layout.alignment: Qt.AlignVCenter
+                source: Qt.resolvedUrl("../images/star.svg")
+                isMask: true
+                color: Kirigami.Theme.textColor
+            }
+
+            // Hidden when there is no memorial date to count down to.
+            PlasmaComponents.Label {
+                visible: memo.memorial.found === true
+                text: memo.memorial.days
+                font.bold: true
+                color: Kirigami.Theme.highlightColor
             }
         }
     }

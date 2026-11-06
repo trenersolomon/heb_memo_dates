@@ -131,8 +131,39 @@ QVariantMap makeMissing(const QString &lang, const char *messageKey)
 
 // ─── Date parsing ─────────────────────────────────────────────────────────────
 
+// Hebrew leap year (13 months): years 3, 6, 8, 11, 14, 17 and 19 of the
+// 19-year cycle.
+bool isHebrewLeapYear(int year)
+{
+    return (7 * year + 1) % 19 < 7;
+}
+
+// libhdate numbers months by name: 1 = Tishrei ... 12 = Elul, 6 = Adar in a
+// plain year, and 13 / 14 = Adar I / Adar II in a leap year. So the month
+// number of a date written in `fromYear` cannot simply be reused in another
+// year when Adar is involved. The usual rule, used here:
+//   - Adar of a plain year   -> Adar II in a leap year
+//   - Adar I / Adar II       -> Adar in a plain year (kept as is in a leap year)
+// Every other month keeps its number. Asking libhdate for a month that does
+// not exist in the target year is avoided on purpose, because its behaviour
+// there is not documented.
+int monthInYear(int month, int fromYear, int toYear)
+{
+    // Defensive: if libhdate ever reports Adar I of a leap year as 6.
+    if (month == 6 && isHebrewLeapYear(fromYear))
+        month = 13;
+
+    const bool toLeap = isHebrewLeapYear(toYear);
+    if (month == 6)
+        return toLeap ? 14 : 6;
+    if (month == 13 || month == 14)
+        return toLeap ? month : 6;
+    return month;
+}
+
 // Sets `hd` to the nearest occurrence (today or in the future) of the date
-// written in the CSV as "D.M.Y".
+// written in the CSV as "D.M.Y". Every entry repeats on its HEBREW date,
+// whichever calendar it was written in.
 void parseNextOccurrence(const std::string &dateStr,
                          hdate_struct *hd,
                          const hdate_struct *today)
@@ -143,19 +174,25 @@ void parseNextOccurrence(const std::string &dateStr,
     if (std::sscanf(dateStr.c_str(), "%d.%d.%d", &day, &month, &year) != 3)
         throw std::runtime_error("Invalid date format: " + dateStr);
 
-    if (year > kHebrewYearThreshold) {
-        // Hebrew anniversary: try this Hebrew year, then the next one.
-        hdate_set_hdate(hd, day, month, today->hd_year);
-        if (today->hd_jd > hd->hd_jd)
-            hdate_set_hdate(hd, day, month, today->hd_year + 1);
-    } else {
-        // Gregorian anniversary: try this Gregorian year, then the next one.
-        // NOTE: the original code moved the *Hebrew* year forward here, which
-        // made Gregorian dates drift by up to a month. Staying in the same
-        // calendar is what "the next occurrence of this date" really means.
-        hdate_set_gdate(hd, day, month, today->gd_year);
-        if (today->hd_jd > hd->hd_jd)
-            hdate_set_gdate(hd, day, month, today->gd_year + 1);
+    // Find the Hebrew date that repeats every year.
+    int hDay = day, hMonth = month, hYear = year;
+    if (year <= kHebrewYearThreshold) {
+        // A Gregorian date in the file is the ORIGINAL date (a birth, a death).
+        // The anniversary follows the Hebrew calendar, so convert it once to
+        // its Hebrew date and repeat that one. Repeating the Gregorian date
+        // would put a birthday on a different Hebrew day every year.
+        hdate_set_gdate(hd, day, month, year);
+        hDay = hd->hd_day;
+        hMonth = hd->hd_mon;
+        hYear = hd->hd_year;
+    }
+
+    // Try this Hebrew year first, then the next one if the date already passed.
+    int targetYear = today->hd_year;
+    hdate_set_hdate(hd, hDay, monthInYear(hMonth, hYear, targetYear), targetYear);
+    if (today->hd_jd > hd->hd_jd) {
+        ++targetYear;
+        hdate_set_hdate(hd, hDay, monthInYear(hMonth, hYear, targetYear), targetYear);
     }
 }
 

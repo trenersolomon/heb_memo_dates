@@ -63,9 +63,12 @@ date,name,type
 10.8.5750,Third Sample,Yahrzeit
 ```
 
-- `date` is `D.M.Y`. A year up to 5000 is read as a Gregorian date, a year
-  above 5000 as a Hebrew date. Hebrew month numbers follow libhdate
-  (1 = Tishrei ... 12 = Elul).
+- `date` is `D.M.Y`. A year up to 5000 is a Gregorian date, a year above 5000
+  a Hebrew date. Either way the entry repeats every year on its **Hebrew**
+  date: a Gregorian date is the original date (for example a birth) and is
+  converted to the Hebrew date once.
+- Hebrew month numbers follow libhdate: 1 = Tishrei ... 12 = Elul, 6 = Adar
+  (plain year), 13 / 14 = Adar I / Adar II (leap year).
 - Lines starting with `#` are comments.
 - Your real data file is personal: keep it outside the repository.
 
@@ -74,8 +77,13 @@ date,name,type
 - Holiday names are a table keyed by libhdate's holiday numbers (1-37). They
   may change between libhdate versions, so re-check the table in
   `cpp/src/translator.cpp` after upgrading the library.
-- Entries in the month of Adar are not treated specially across leap and
-  non-leap Hebrew years.
+- Adar: an entry in the Adar of a plain year falls on Adar II in a leap year;
+  Adar I and Adar II fall on Adar in a plain year. Other customs (for example
+  Sephardic) are not supported.
+- A Gregorian date is converted as written, so an event after nightfall, which
+  belongs to the next Hebrew day, should be entered as a Hebrew date.
+- The 30th of Cheshvan, Kislev or Adar I in a year where that day does not
+  exist is handled however libhdate handles it; this was not checked.
 - Hebrew as an interface language is not supported yet.
 
 ## Credits

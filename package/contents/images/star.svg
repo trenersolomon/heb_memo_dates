@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Star of David outline: two overlapping equilateral triangles.
+  Single flat color on purpose: the widget draws it with Kirigami.Icon
+  (isMask: true), which keeps only the shape and repaints it in the current
+  theme's text color, so one file works on light and dark themes.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60 -60 120 120" width="120" height="120">
+  <g fill="none" stroke="#000000" stroke-width="5" stroke-linejoin="round">
+    <polygon points="0,-50 43.3,25 -43.3,25"/>
+    <polygon points="0,50 43.3,-25 -43.3,-25"/>
+  </g>
+</svg>
