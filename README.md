@@ -15,8 +15,8 @@ plugin, so the QML side contains no calculation code.
 - Refreshes when the calendar day changes (checked every 30 minutes)
 - Interface language: Russian, English or Hebrew (widget text, month and
   holiday names, and the settings page); the layout is mirrored for Hebrew
-- Follows the Plasma theme; the background can be set to default, translucent
-  or off from the widget's context menu
+- Follows the Plasma theme; the background transparency can be adjusted in
+  the widget settings
 
 ## Dependencies
 
@@ -54,6 +54,8 @@ Right-click the widget and open its settings:
   a short description of the format. A path you choose yourself is never
   created automatically.
 - **Language**: Russian, English or Hebrew
+- **Background transparency**: 0 % is a solid background, 100 % removes it
+  (the text then sits directly on the wallpaper)
 
 ## Data file format
 

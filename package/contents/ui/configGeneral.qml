@@ -18,6 +18,8 @@ KCM.SimpleKCM {
     // "Setting initial properties failed" warnings in the log.
     property string cfg_filePathDefault
     property string cfg_languageDefault
+    property int cfg_backgroundTransparency
+    property int cfg_backgroundTransparencyDefault
 
     // Order must match the ComboBox model below.
     readonly property var languageCodes: ["ru", "en", "he"]
@@ -54,6 +56,26 @@ KCM.SimpleKCM {
             QQC2.Button {
                 icon.name: "document-open"
                 onClicked: fileDialog.open()
+            }
+        }
+
+        // 0 % = fully opaque background, 100 % = no background at all.
+        RowLayout {
+            Kirigami.FormData.label: tr.strings.configTransparencyLabel
+
+            QQC2.Slider {
+                Layout.fillWidth: true
+                from: 0
+                to: 100
+                stepSize: 5
+                snapMode: QQC2.Slider.SnapAlways
+                value: page.cfg_backgroundTransparency
+                onMoved: page.cfg_backgroundTransparency = Math.round(value)
+            }
+
+            QQC2.Label {
+                text: Math.round(page.cfg_backgroundTransparency) + "%"
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 2
             }
         }
     }

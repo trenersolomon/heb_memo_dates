@@ -12,18 +12,22 @@ PlasmoidItem {
     // qmllint disable missing-property
     property string memoFile: plasmoid.configuration.filePath
     property string language: plasmoid.configuration.language
+    // Falls back to 15 % if main.xml has no such entry (for example an old
+    // main.xml next to a new main.qml), so the widget still loads and draws.
+    property real backgroundTransparency: plasmoid.configuration.backgroundTransparency !== undefined
+                                          ? plasmoid.configuration.backgroundTransparency : 15
 
     // Widget Setup
-    width: Kirigami.Units.gridUnit * 20
+    width: Kirigami.Units.gridUnit * 16
     height: Kirigami.Units.gridUnit * 17
     toolTipMainText: "Hebrew Memory dates"
     toolTipSubText: memo.todayText
 
-    // Use the standard Plasma background instead of drawing our own: it follows
-    // the user's theme (light/dark, blur, rounded corners) and, with
-    // ConfigurableBackground, the user can switch it to translucent or off
-    // from the widget's right-click menu.
-    Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
+    // The standard Plasma background can only be switched on or off, so the
+    // widget draws its own background (see the Rectangle in fullRepresentation)
+    // with a transparency the user can set in the widget settings. Its color
+    // comes from the theme, so it still fits light and dark color schemes.
+    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
     CppBridge.MemoBridge {
         id: memo
@@ -55,6 +59,18 @@ PlasmoidItem {
         // the watermark). Nothing changes for the other languages.
         LayoutMirroring.enabled: tr.rtl
         LayoutMirroring.childrenInherit: true
+
+        // Own background with adjustable transparency (0 % = solid, 100 % = none).
+        // Drawn first, so everything else lies on top of it. Shown only for a
+        // widget on the desktop: inside a panel's popup, Plasma already draws
+        // the popup frame and a second background would double it.
+        Rectangle {
+            anchors.fill: parent
+            visible: Plasmoid.formFactor === PlasmaCore.Types.Planar
+            radius: Kirigami.Units.gridUnit * 0.6
+            color: Kirigami.Theme.backgroundColor
+            opacity: 1 - root.backgroundTransparency / 100
+        }
 
         // Subtle symbol in the bottom-right corner. It is drawn first, so it
         // lies under the text. isMask keeps only the shape and repaints it in

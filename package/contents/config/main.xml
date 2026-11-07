@@ -13,5 +13,11 @@
             <label>Interface language</label>
             <default>en</default>
         </entry>
+        <entry name="backgroundTransparency" type="Int">
+            <label>Background transparency in percent</label>
+            <default>15</default>
+            <min>0</min>
+            <max>100</max>
+        </entry>
     </group>
 </kcfg>
