@@ -50,6 +50,12 @@ PlasmoidItem {
         // so whatever sticks out must be cut off at the widget edge.
         clip: true
 
+        // Hebrew reads right to left: when it is the chosen language, mirror
+        // the whole layout (text alignment, the number/unit row, the corner of
+        // the watermark). Nothing changes for the other languages.
+        LayoutMirroring.enabled: tr.rtl
+        LayoutMirroring.childrenInherit: true
+
         // Subtle symbol in the bottom-right corner. It is drawn first, so it
         // lies under the text. isMask keeps only the shape and repaints it in
         // the theme's text color, which works on light and dark themes alike.

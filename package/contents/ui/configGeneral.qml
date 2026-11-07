@@ -20,7 +20,7 @@ KCM.SimpleKCM {
     property string cfg_languageDefault
 
     // Order must match the ComboBox model below.
-    readonly property var languageCodes: ["ru", "en"]
+    readonly property var languageCodes: ["ru", "en", "he"]
 
     // Texts of this page come from the same C++ table as the widget itself.
     // Bound to cfg_language, so labels switch immediately when the user picks
@@ -36,7 +36,7 @@ KCM.SimpleKCM {
 
             // Language names are shown in their own language on purpose,
             // so a user who ended up in the wrong language can still find it.
-            model: ["Русский", "English"]
+            model: ["Русский", "English", "עברית"]
             currentIndex: Math.max(0, page.languageCodes.indexOf(page.cfg_language))
             onActivated: page.cfg_language = page.languageCodes[currentIndex]
         }

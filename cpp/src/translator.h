@@ -7,7 +7,7 @@
 #include <QtQml/qqmlregistration.h>
 
 /**
- * Translator - the single table of user-visible strings (ru / en).
+ * Translator - the single table of user-visible strings (ru / en / he).
  *
  * Why our own table instead of KDE's i18n(): i18n() follows the *system*
  * locale, but this widget has its own "language" setting. Keeping the table
@@ -26,11 +26,16 @@ class Translator : public QObject
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(QVariantMap strings READ strings NOTIFY languageChanged)
 
+    // True for right-to-left languages (Hebrew). QML uses it to mirror the layout.
+    Q_PROPERTY(bool rtl READ rtl NOTIFY languageChanged)
+
 public:
     explicit Translator(QObject *parent = nullptr);
 
     QString language() const { return m_language; }
     void setLanguage(const QString &language);
+
+    bool rtl() const { return m_language == QLatin1String("he"); }
 
     // All strings of the current language, key -> text, for QML bindings.
     QVariantMap strings() const;
@@ -40,7 +45,8 @@ public:
     // itself so a typo is visible on screen instead of silently empty.
     static QString lookup(const QString &language, const char *key);
 
-    // Maps "en", "en_US", "EN", "" ... onto one of the supported codes.
+    // Maps "en", "en_US", "he", "iw", "EN", "" ... onto one of the supported
+    // codes: "ru", "en" or "he".
     static QString normalizeLanguage(const QString &language);
 
     // Names of Hebrew months and holidays, keyed by the NUMBERS libhdate uses
@@ -52,7 +58,7 @@ public:
     static QString holidayName(const QString &language, int holyday);
 
     // The word for the unit after a number of days, with correct plural form
-    // ("1 день", "3 дня", "5 дней" / "1 day", "5 days").
+    // ("1 день", "3 дня", "5 дней" / "1 day", "5 days" / "1 יום", "5 ימים").
     static QString daysUnit(const QString &language, long days);
 
 signals:

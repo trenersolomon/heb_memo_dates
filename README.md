@@ -13,8 +13,8 @@ plugin, so the QML side contains no calculation code.
 - Nearest Jewish holiday (Israel schedule)
 - Today's Hebrew date
 - Refreshes when the calendar day changes (checked every 30 minutes)
-- Interface language: Russian or English (widget text, month and holiday names,
-  and the settings page)
+- Interface language: Russian, English or Hebrew (widget text, month and
+  holiday names, and the settings page); the layout is mirrored for Hebrew
 - Follows the Plasma theme; the background can be set to default, translucent
   or off from the widget's context menu
 
@@ -53,7 +53,7 @@ Right-click the widget and open its settings:
   folder. If that file does not exist, the widget creates it on first run with
   a short description of the format. A path you choose yourself is never
   created automatically.
-- **Language**: Russian or English
+- **Language**: Russian, English or Hebrew
 
 ## Data file format
 
@@ -90,7 +90,7 @@ date,name,type
   belongs to the next Hebrew day, should be entered as a Hebrew date.
 - The 30th of Cheshvan, Kislev or Adar I in a year where that day does not
   exist is handled however libhdate handles it; this was not checked.
-- Hebrew as an interface language is not supported yet.
+- The Hebrew texts were written without a native review; corrections are welcome.
 
 ## Credits
 

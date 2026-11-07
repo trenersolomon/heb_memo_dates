@@ -420,12 +420,14 @@ void createDefaultFileIfMissing(const QString &path)
         return;
     }
     // The file belongs to the user, not to the interface language, so it
-    // explains the format in English AND Russian. The header line must stay
-    // exactly "date,name,type": the reader looks for those column names.
+    // explains the format in English, Russian AND Hebrew. The header line must
+    // stay exactly "date,name,type": the reader looks for those column names.
+    const QString separator =
+        QStringLiteral("#\n# ----------------------------------------------------------------\n#\n");
     const QString content =
-        Translator::lookup(QStringLiteral("en"), "fileComments")
-        + QLatin1String("#\n# ----------------------------------------------------------------\n#\n")
-        + Translator::lookup(QStringLiteral("ru"), "fileComments")
+        Translator::lookup(QStringLiteral("en"), "fileComments") + separator
+        + Translator::lookup(QStringLiteral("ru"), "fileComments") + separator
+        + Translator::lookup(QStringLiteral("he"), "fileComments")
         + QLatin1String("date,name,type\n");
     file.write(content.toUtf8());
 }

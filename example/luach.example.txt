@@ -1,0 +1,60 @@
+# Example memorial dates file for the Hebrew Memorial Dates widget.
+# Copy it to your Documents folder as mem_dates_luach.txt (or choose another
+# path in the widget settings) and replace the sample rows with your own.
+# Add one entry per line below the header line date,name,type.
+# Lines starting with # are comments.
+#
+# date: a date written as D.M.Y
+#   Year up to 5000: the Gregorian date of the event (for example a birth). It is
+#   converted to the Hebrew date once, and the event then repeats by the Hebrew calendar.
+#   Year above 5000: a Hebrew date (months: 1 = Tishrei ... 12 = Elul,
+#   6 = Adar, in a leap year 13 and 14 = Adar I and Adar II).
+# name: a name or title of the event
+# type: the kind of event (for example: birthday, yahrzeit)
+# Lines with errors are skipped; the widget shows their numbers.
+# The file must be saved as UTF-8: names may be in any language.
+#
+# ----------------------------------------------------------------
+#
+# Пример файла памятных дат для виджета Hebrew Memorial Dates.
+# Скопируйте его в папку «Документы» под именем mem_dates_luach.txt (или укажите
+# другой путь в настройках виджета) и замените примеры своими записями.
+# Добавляйте по одной записи на строку под строкой заголовка date,name,type.
+# Строки, начинающиеся с #, являются комментариями.
+#
+# date: дата в формате Д.М.Г
+#   Год до 5000: григорианская дата события (например, рождения). Она один раз
+#   переводится в еврейскую, и дальше событие повторяется по еврейскому календарю.
+#   Год больше 5000: еврейская дата (месяцы: 1 = Тишрей ... 12 = Элул,
+#   6 = Адар, в високосный год 13 и 14 = Адар I и Адар II).
+# name: имя или название события
+# type: вид события (например: день рождения, йорцайт)
+# Строки с ошибками пропускаются, виджет покажет их номера.
+# Файл должен быть сохранён в UTF-8: имена могут быть на любом языке.
+#
+# ----------------------------------------------------------------
+#
+# קובץ דוגמה של תאריכי זיכרון עבור הווידג'ט Hebrew Memorial Dates.
+# העתיקו אותו לתיקיית המסמכים בשם mem_dates_luach.txt (או בחרו נתיב אחר
+# בהגדרות הווידג'ט) והחליפו את שורות הדוגמה ברשומות שלכם.
+# הוסיפו רשומה אחת בכל שורה, מתחת לשורת הכותרת date,name,type.
+# שורות שמתחילות ב-# הן הערות.
+#
+# date: תאריך בפורמט D.M.Y (יום.חודש.שנה)
+#   שנה עד 5000: התאריך הלועזי של האירוע (למשל יום הולדת). הוא מומר פעם אחת
+#   לתאריך עברי, ומאז האירוע חוזר לפי הלוח העברי.
+#   שנה מעל 5000: תאריך עברי (חודשים: 1 = תשרי ... 12 = אלול,
+#   6 = אדר, בשנה מעוברת 13 ו-14 = אדר א׳ ואדר ב׳).
+# name: שם או תיאור האירוע
+# type: סוג האירוע (למשל: יום הולדת, יארצייט)
+# שורות עם שגיאות מדולגות, והווידג'ט יציג את מספריהן.
+# יש לשמור את הקובץ בקידוד UTF-8: אפשר לכתוב שמות בכל שפה.
+#
+# ----------------------------------------------------------------
+#
+# Sample rows (all names are made up) / Примеры (все имена выдуманы) / שורות לדוגמה (כל השמות בדויים):
+date,name,type
+15.3.1950,Sample Person,Birthday
+2.11.1990,Иван Иванов,день рождения
+10.8.5750,ישראל ישראלי,יארצייט
+25.12.5755,Another Sample,Yahrzeit
