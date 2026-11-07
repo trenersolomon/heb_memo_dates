@@ -3,6 +3,10 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QStandardPaths>
+#include <QStringList>
 #include <QUrl>
 
 #include <cstdio>   // sscanf
@@ -121,12 +125,48 @@ QVariantMap makeEntry(const QString &lang,
 }
 
 // "Nothing to show" - QML displays `message` instead of the event layout.
-QVariantMap makeMissing(const QString &lang, const char *messageKey)
+// `arg` fills the %1 of the message when it has one (e.g. the file path).
+QVariantMap makeMissing(const QString &lang, const char *messageKey,
+                        const QString &arg = QString())
 {
+    QString text = Translator::lookup(lang, messageKey);
+    if (!arg.isEmpty())
+        text = text.arg(arg);
+
     QVariantMap m;
     m.insert(QStringLiteral("found"), false);
-    m.insert(QStringLiteral("message"), Translator::lookup(lang, messageKey));
+    m.insert(QStringLiteral("message"), text);
     return m;
+}
+
+// A problem with the data file. It is shown in place of the memorial block,
+// in the error color, while the rest of the widget keeps working.
+QVariantMap makeProblem(const QString &lang, const char *messageKey,
+                        const QString &arg = QString())
+{
+    QVariantMap m = makeMissing(lang, messageKey, arg);
+    m.insert(QStringLiteral("isError"), true);
+    return m;
+}
+
+// "N lines were skipped (lines 5, 9)". At most a few line numbers are listed,
+// so the message stays short even for a badly damaged file; the full details
+// go to the log. Returns an empty string when nothing was skipped.
+QString skippedLinesWarning(const QString &lang, const QList<unsigned> &badLines)
+{
+    if (badLines.isEmpty())
+        return QString();
+
+    constexpr int kMaxListed = 5;
+    QStringList listed;
+    for (int i = 0; i < badLines.size() && i < kMaxListed; ++i)
+        listed << QString::number(badLines[i]);
+    QString lines = listed.join(QStringLiteral(", "));
+    if (badLines.size() > kMaxListed)
+        lines += QStringLiteral(", ...");
+
+    return Translator::lookup(lang, "warnSkipped")
+        .arg(QString::number(badLines.size()), lines);
 }
 
 // ─── Date parsing ─────────────────────────────────────────────────────────────
@@ -174,6 +214,14 @@ void parseNextOccurrence(const std::string &dateStr,
     if (std::sscanf(dateStr.c_str(), "%d.%d.%d", &day, &month, &year) != 3)
         throw std::runtime_error("Invalid date format: " + dateStr);
 
+    // Reject impossible values (31.2.1990, 32.1.1990, month 15 ...) instead of
+    // letting libhdate turn them into some other date without a word.
+    const bool valid = (year > kHebrewYearThreshold)
+        ? (month >= 1 && month <= 14 && day >= 1 && day <= 30)
+        : QDate(year, month, day).isValid();
+    if (!valid)
+        throw std::runtime_error("Date out of range: " + dateStr);
+
     // Find the Hebrew date that repeats every year.
     int hDay = day, hMonth = month, hYear = year;
     if (year <= kHebrewYearThreshold) {
@@ -216,7 +264,26 @@ QVariantMap findNearestMemorial(const hdate_struct *today,
     std::string dateStr, name, type, nearestName, nearestType;
     bool found = false;
 
-    while (in.read_row(dateStr, name, type)) {
+    // Lines that could not be used. They are skipped, counted and reported to
+    // the user, but they never stop the remaining lines from being read.
+    QList<unsigned> badLines;
+
+    for (;;) {
+        try {
+            if (!in.read_row(dateStr, name, type))
+                break;
+        } catch (const io::error::line_length_limit_exceeded &) {
+            // The reader cannot step past such a line, so retrying would loop
+            // forever: give up on the whole file.
+            throw;
+        } catch (const std::exception &e) {
+            // A line with too few / too many columns. The reader has already
+            // moved on to the next line, so it is safe to carry on.
+            badLines.append(in.get_file_line());
+            qWarning() << "luach line" << in.get_file_line() << ":" << e.what();
+            continue;
+        }
+
         try {
             parseNextOccurrence(dateStr, current.get(), today);
 
@@ -231,14 +298,21 @@ QVariantMap findNearestMemorial(const hdate_struct *today,
             }
         } catch (const std::exception &e) {
             // A bad date in one row must not hide all the other rows.
+            badLines.append(in.get_file_line());
             qWarning() << "luach line" << in.get_file_line() << ":" << e.what();
         }
     }
 
+    const QString warning = skippedLinesWarning(lang, badLines);
+
     // The original code printed garbage here for an empty file because
     // `nearest` was never initialised; handle it explicitly.
-    if (!found)
-        return makeMissing(lang, "noMemorials");
+    if (!found) {
+        QVariantMap missing = makeMissing(lang, "noMemorials", path);
+        if (!warning.isEmpty())
+            missing.insert(QStringLiteral("warning"), warning);
+        return missing;
+    }
 
     // The CSV "type" column (kind of memorial) goes before the name, as in the
     // original console output.
@@ -246,11 +320,16 @@ QVariantMap findNearestMemorial(const hdate_struct *today,
                            + QLatin1Char(' ')
                            + QString::fromUtf8(nearestName.c_str())).trimmed();
 
-    return makeEntry(lang,
-                     title,
-                     gregorianText(nearest.get()),
-                     hebrewText(nearest.get(), lang),
-                     nearest->hd_jd - today->hd_jd);
+    QVariantMap entry = makeEntry(lang,
+                                  title,
+                                  gregorianText(nearest.get()),
+                                  hebrewText(nearest.get(), lang),
+                                  nearest->hd_jd - today->hd_jd);
+    // If some lines were skipped, the nearest date shown may not be the true
+    // nearest one, so the warning travels with the result.
+    if (!warning.isEmpty())
+        entry.insert(QStringLiteral("warning"), warning);
+    return entry;
 }
 
 // ─── Nearest holiday ──────────────────────────────────────────────────────────
@@ -298,32 +377,87 @@ QString normalizePath(QString raw)
     return raw;
 }
 
+// Where the file lives when the user has not chosen a path: the Documents
+// folder (found through QStandardPaths, so it is "Документы" or "Documents"
+// or whatever the user's system calls it). It is deliberately a visible,
+// ordinary folder: the file is meant to be edited by hand by non-technical
+// users. If the system reports no Documents folder, fall back to the home
+// directory.
+QString defaultFilePath()
+{
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    if (dir.isEmpty())
+        dir = QDir::homePath();
+    return QDir(dir).filePath(QStringLiteral("mem_dates_luach.txt"));
+}
+
+// The one place that decides which file is used: the configured path, or the
+// default location when the setting is empty.
+QString effectivePath(const QString &configured)
+{
+    const QString path = normalizePath(configured);
+    return path.isEmpty() ? defaultFilePath() : path;
+}
+
+// Creates the starter file on first run, so a new user gets a short hint in
+// the widget instead of a "cannot open file" error.
+// Only ever done for the DEFAULT location: a path the user typed themselves
+// is never created behind their back (a typo there should be reported), and
+// an existing file is never touched. NewOnly makes "create unless it already
+// exists" a single atomic step.
+void createDefaultFileIfMissing(const QString &path)
+{
+    if (path != defaultFilePath() || QFileInfo::exists(path))
+        return;
+
+    QDir().mkpath(QFileInfo(path).absolutePath());
+
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::NewOnly | QIODevice::Text)) {
+        // E.g. a read-only Documents folder: the normal "cannot open file"
+        // message will tell the user, so this only goes to the log.
+        qWarning() << "Could not create" << path << ":" << file.errorString();
+        return;
+    }
+    // The file belongs to the user, not to the interface language, so it
+    // explains the format in English AND Russian. The header line must stay
+    // exactly "date,name,type": the reader looks for those column names.
+    const QString content =
+        Translator::lookup(QStringLiteral("en"), "fileComments")
+        + QLatin1String("#\n# ----------------------------------------------------------------\n#\n")
+        + Translator::lookup(QStringLiteral("ru"), "fileComments")
+        + QLatin1String("date,name,type\n");
+    file.write(content.toUtf8());
+}
+
 // Pure function of (file, date, language): takes the date as a parameter so
 // the whole snapshot is consistent even if midnight passes while we compute.
-Snapshot buildSnapshot(const QString &rawPath, const QDate &date, const QString &lang)
+Snapshot buildSnapshot(const QString &path, const QDate &date, const QString &lang)
 {
     Snapshot s;
-    const QString path = normalizePath(rawPath);
-
-    // Fresh widget with no configured file yet: say so instead of trying to
-    // open "" (whose error message would be confusing).
-    if (path.isEmpty()) {
-        s.error = Translator::lookup(lang, "errNoPath");
-        return s;
-    }
 
     try {
         HDate today = makeHDate();
         hdate_set_gdate(today.get(), date.day(), date.month(), date.year());
 
+        // Today's date and the nearest holiday come from the calendar alone,
+        // so they are computed first and never depend on the memorial file.
         s.today = Translator::lookup(lang, "today").arg(hebrewText(today.get(), lang));
-        s.memorial = findNearestMemorial(today.get(), path, lang);
         s.holiday = findNearestHoliday(today.get(), lang);
-    } catch (const io::error::can_not_open_file &) {
-        s.error = Translator::lookup(lang, "errOpen").arg(path);
-    } catch (const io::error::header_missing &) {
-        s.error = Translator::lookup(lang, "errHeader");
+
+        // Only the memorial part needs the file. A problem with it is reported
+        // inside the memorial block and must not hide the rest of the widget.
+        try {
+            s.memorial = findNearestMemorial(today.get(), path, lang);
+        } catch (const io::error::can_not_open_file &) {
+            s.memorial = makeProblem(lang, "errOpen", path);
+        } catch (const io::error::header_missing &) {
+            s.memorial = makeProblem(lang, "errHeader");
+        } catch (const std::exception &e) {
+            s.memorial = makeProblem(lang, "errGeneric", QString::fromUtf8(e.what()));
+        }
     } catch (const std::exception &e) {
+        // Failure of the calendar part itself (e.g. out of memory).
         s.error = Translator::lookup(lang, "errGeneric").arg(QString::fromUtf8(e.what()));
     }
     return s;
@@ -335,9 +469,9 @@ Snapshot buildSnapshot(const QString &rawPath, const QDate &date, const QString 
 
 MemoBridge::MemoBridge(QObject *parent)
     : QObject(parent)
-    // No default path on purpose: the single source of truth is the widget's
-    // configuration (its default lives in main.xml), which QML binds to
-    // `filePath`. A second default here would silently disagree with it.
+    // filePath stays empty here and QML binds it to the widget setting. An
+    // empty path means "use the default file" (<Documents>/mem_dates_luach.txt),
+    // which is worked out in one place only: effectivePath().
     // The language default only matters for the first instant before QML
     // applies the configured value.
     , m_language(QStringLiteral("ru"))
@@ -379,7 +513,13 @@ void MemoBridge::refreshIfDateChanged()
 void MemoBridge::refresh()
 {
     const QDate today = QDate::currentDate();
-    const Snapshot s = buildSnapshot(m_filePath, today, m_language);
+
+    // An empty setting means "use the default file". Make sure that file
+    // exists, so a first-time user sees the widget's hint rather than an error.
+    const QString path = effectivePath(m_filePath);
+    createDefaultFileIfMissing(path);
+
+    const Snapshot s = buildSnapshot(path, today, m_language);
 
     m_lastRefreshDate = today;
     m_todayText = s.today;

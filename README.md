@@ -49,7 +49,10 @@ persistence.
 Right-click the widget and open its settings:
 
 - **Memorial dates file**: path to your CSV file (`~` and `file://` paths are
-  accepted)
+  accepted). Leave it empty to use `mem_dates_luach.txt` in your Documents
+  folder. If that file does not exist, the widget creates it on first run with
+  a short description of the format. A path you choose yourself is never
+  created automatically.
 - **Language**: Russian or English
 
 ## Data file format
@@ -70,6 +73,9 @@ date,name,type
 - Hebrew month numbers follow libhdate: 1 = Tishrei ... 12 = Elul, 6 = Adar
   (plain year), 13 / 14 = Adar I / Adar II (leap year).
 - Lines starting with `#` are comments.
+- A line with an error (wrong number of columns, impossible date) is skipped;
+  the widget keeps working with the other lines and shows a warning with the
+  numbers of the skipped lines.
 - Your real data file is personal: keep it outside the repository.
 
 ## Known limitations

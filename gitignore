@@ -21,3 +21,4 @@ CMakeLists.txt.user*
 # Personal data: the real memorial dates file must never be committed.
 # Use example/luach.example.txt as a template instead.
 luach.txt
+mem_dates_luach.txt

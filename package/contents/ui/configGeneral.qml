@@ -47,7 +47,8 @@ KCM.SimpleKCM {
             QQC2.TextField {
                 id: filePathField
                 Layout.fillWidth: true
-                placeholderText: "~/luach.txt"
+                // Empty field = the default file in the Documents folder.
+                placeholderText: tr.strings.configFilePlaceholder
             }
 
             QQC2.Button {

@@ -124,7 +124,20 @@ PlasmoidItem {
             PlasmaComponents.Label {
                 visible: entry.found !== true && !!entry.message
                 text: entry.message ? entry.message : ""
-                opacity: 0.7
+                // Problems (e.g. file not found) in the error color, hints in a muted one.
+                color: entry.isError === true ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+                opacity: entry.isError === true ? 1 : 0.7
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+            }
+
+            // Some lines of the data file were skipped, so the result above
+            // may be incomplete. Stays visible until the file is fixed.
+            PlasmaComponents.Label {
+                visible: !!entry.warning
+                text: entry.warning ? entry.warning : ""
+                color: Kirigami.Theme.neutralTextColor
+                font.pointSize: Kirigami.Theme.smallFont.pointSize
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
             }

@@ -31,17 +31,15 @@ const Entry kTable[] = {
     {"dayToday",
      "Сегодня",
      "Today"},
+    // %1 = path of the memorial dates file, so a new user knows where to add dates.
     {"noMemorials",
-     "Нет памятных дат в файле",
-     "No memorial dates in the file"},
+     "Нет памятных дат. Добавьте их в файл:\n%1",
+     "No memorial dates yet. Add them to the file:\n%1"},
     {"noHoliday",
      "Ближайший праздник не найден",
      "Nearest holiday not found"},
 
     // ── errors ───────────────────────────────────────────────────────────────
-    {"errNoPath",
-     "Ошибка: путь к файлу с памятными датами не задан (настройки виджета)",
-     "Error: the memorial dates file path is not set (widget settings)"},
     {"errOpen",
      "Ошибка: не удалось открыть файл %1",
      "Error: cannot open file %1"},
@@ -51,6 +49,11 @@ const Entry kTable[] = {
     {"errGeneric",
      "Ошибка: %1",
      "Error: %1"},
+
+    // %1 = number of skipped lines, %2 = their line numbers (e.g. "5, 9").
+    {"warnSkipped",
+     "Пропущено строк с ошибками: %1 (строки: %2). Проверьте файл, результат может быть неполным.",
+     "Skipped lines with errors: %1 (lines: %2). Please check the file; the result may be incomplete."},
 
     // ── config page ──────────────────────────────────────────────────────────
     {"configFileLabel",
@@ -62,6 +65,45 @@ const Entry kTable[] = {
     {"fileDialogTitle",
      "Выберите файл с памятными датами",
      "Select the memorial dates file"},
+    {"configFilePlaceholder",
+     "По умолчанию: Документы/mem_dates_luach.txt",
+     "Default: Documents/mem_dates_luach.txt"},
+
+    // ── contents of the file created on first run ───────────────────────────
+    // Explanation put at the top of the file in BOTH languages (see
+    // createDefaultFileIfMissing, which adds the header line after them).
+    // Comment lines start with '#'.
+    {"fileComments",
+     "# Файл памятных дат для виджета Hebrew Memorial Dates.\n"
+     "# Добавляйте по одной записи на строку под строкой заголовка date,name,type.\n"
+     "# Строки, начинающиеся с #, являются комментариями.\n"
+     "#\n"
+     "# date: дата в формате Д.М.Г\n"
+     "#   Год до 5000: григорианская дата события (например, рождения). Она один раз\n"
+     "#   переводится в еврейскую, и дальше событие повторяется по еврейскому календарю.\n"
+     "#   Год больше 5000: еврейская дата (месяцы: 1 = Тишрей ... 12 = Элул,\n"
+     "#   6 = Адар, в високосный год 13 и 14 = Адар I и Адар II).\n"
+     "# name: имя или название события\n"
+     "# type: вид события (например: день рождения, йорцайт)\n"
+     "# Строки с ошибками пропускаются, виджет покажет их номера.\n"
+     "#\n"
+     "# Пример (чтобы записать его в файл, удалите # в начале строки):\n"
+     "# 15.3.1950,Иван Иванов,день рождения\n",
+     "# Memorial dates file for the Hebrew Memorial Dates widget.\n"
+     "# Add one entry per line below the header line date,name,type.\n"
+     "# Lines starting with # are comments.\n"
+     "#\n"
+     "# date: a date written as D.M.Y\n"
+     "#   Year up to 5000: the Gregorian date of the event (for example a birth). It is\n"
+     "#   converted to the Hebrew date once, and the event then repeats by the Hebrew calendar.\n"
+     "#   Year above 5000: a Hebrew date (months: 1 = Tishrei ... 12 = Elul,\n"
+     "#   6 = Adar, in a leap year 13 and 14 = Adar I and Adar II).\n"
+     "# name: a name or title of the event\n"
+     "# type: the kind of event (for example: birthday, yahrzeit)\n"
+     "# Lines with errors are skipped; the widget shows their numbers.\n"
+     "#\n"
+     "# Example (remove the # at the start of the line to make it a real entry):\n"
+     "# 15.3.1950,John Smith,birthday\n"},
 };
 
 struct Names {

@@ -7,7 +7,7 @@
     <group name="General">
         <entry name="filePath" type="String">
             <label>Path to the memorial dates file</label>
-            <default>/home/solomon/selflerning/luach.txt</default>
+            <default></default>
         </entry>
         <entry name="language" type="String">
             <label>Interface language</label>
